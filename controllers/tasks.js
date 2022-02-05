@@ -1,25 +1,55 @@
 const Task = require('../models/task')
+const asyncWrapper = require('../middleware/async')
 
-const getAllTasks = (req, res) =>{
-    res.send('get all tasks')
-}
+const getAllTasks = asyncWrapper( async (req, res) =>{
+    const tasks = await Task.find({})
+    res.status(200).json({tasks})
 
-const getTask = (req, res) =>{
-    res.send('get task')
-}
+})
 
-const createTask = async (req,res)=>{
+const getTask = asyncWrapper( async (req, res) =>{
+
+    const { id : taskID } = req.params
+
+    const task = await Task.findOne({ _id: taskID})
+    res.status(201).json({task})
+    if (!task){
+        return res.status(404).json({msg: `No task with id : ${taskID}`})
+    }
+})
+
+const createTask = asyncWrapper( async (req,res)=>{
     const task = await Task.create(req.body)
     res.status(201).json({task})
-}
+  
+})
 
-const updateTask = (req,res)=>{
-    res.send('update tasks')
-}
+const updateTask = asyncWrapper( async (req,res)=>{
+    
+    const {id : taskID } = req.params
 
-const deleteTask = (req,res)=>{
-    res.send('delete tasks')
-}
+    const task = await Task.findOneAndUpdate({ _id: taskID}, req.body, {
+        new: true,
+        runValidators: true,
+    })
+
+    if (!task){
+        return res.status(404).json({msg: `No task with id : ${taskID}`})
+    }
+    res.status(201).json({task})
+})
+
+const deleteTask = asyncWrapper( async (req,res)=>{
+
+    const { id : taskID } = req.params
+
+    const task = await Task.deleteOne({ _id: taskID})
+    res.status(201).json({task})
+    if (!task){
+        return res.status(404).json({msg: `No task with id : ${taskID}`})
+    }
+    
+})
 
 module.exports = {
     getAllTasks,
